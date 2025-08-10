@@ -1,7 +1,5 @@
-#!/usr/bin/env tclsh
 package require fileutil
 
-# Рекурсивный поиск лог-файлов
 proc find_log_files {dir} {
     set files {}
     foreach f [fileutil::findByPattern $dir *.log] {
@@ -15,16 +13,10 @@ proc only_txt {line keyword} {
     if {$pos == -1} {
         return ""
     }
-    set start [expr {$pos + [string length $keyword]}]
-    while {$start < [string length $line]} {
-        if {[string index $line $start] in { " " ":"} } {
-            incr start
-        } else {
-            break
-        }
-    }
+    set start [expr {$pos + 8}]
     return [string range $line $start end]
 }
+
 
 proc parse_log_file {filepath} {
     set errors [dict create]
@@ -45,11 +37,16 @@ proc parse_log_file {filepath} {
     }
     close $fh
 
-    return [dict create Error $errors Warning $warnings Info $infos]
+    set output " {\n"
+    append output "    Error {\n$errors    }\n"
+    append output "    Warning {\n$warnings    }\n"
+    append output "    Info {\n$infos    }\n"
+    append output "}\n"
+
+    return $output
 }
 
 proc escape_json_string {str} {
-    # Простейшее экранирование кавычек и обратных слэшей
     regsub -all {\\} $str {\\\\} str
     regsub -all {"} $str {\\\"} str
     regsub -all {\n} $str {\\n} str
@@ -96,7 +93,6 @@ proc full_result_to_json {fullDict} {
     return $json
 }
 
-# Основной код
 
 if {[llength $::argv] == 0} {
     puts "Usage: $argv0 path1 [path2 ...]"
