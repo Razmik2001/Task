@@ -13,10 +13,10 @@ proc only_txt {line keyword} {
     if {$pos == -1} {
         return ""
     }
+
     set start [expr {$pos + 8}]
     return [string range $line $start end]
 }
-
 
 proc parse_log_file {filepath} {
     set errors [dict create]
@@ -37,13 +37,7 @@ proc parse_log_file {filepath} {
     }
     close $fh
 
-    set output " {\n"
-    append output "    Error {\n$errors    }\n"
-    append output "    Warning {\n$warnings    }\n"
-    append output "    Info {\n$infos    }\n"
-    append output "}\n"
-
-    return $output
+    return [dict create Error $errors Warning $warnings Info $infos]
 }
 
 proc escape_json_string {str} {
@@ -95,7 +89,6 @@ proc full_result_to_json {fullDict} {
 
 
 if {[llength $::argv] == 0} {
-    puts "Usage: $argv0 path1 [path2 ...]"
     exit 1
 }
 
@@ -113,5 +106,3 @@ set json_output [full_result_to_json $result]
 set out [open "output.json" w]
 puts $out $json_output
 close $out
-
-puts "JSON saved to output.json"
